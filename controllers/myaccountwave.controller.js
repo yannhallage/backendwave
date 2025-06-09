@@ -23,24 +23,60 @@ const GetAccountWave = async (req, res) => {
     }
 }
 
-const GetAllTransactions = async (req, res) => {
+const getAllTransactionsForUser = async (req, res) => {
+    const { numeroTel } = req.params;
+
     try {
-        const { id } = req.params;
-        console.log("Recherche transactions pour id:", id);
-
-        const transactions = await TransactionRecent.find({ numero_expediteur: id });
-        console.log("Transactions trouvées :", transactions);
-
-        if (!transactions || transactions.length === 0) {
-            return res.status(404).json({ message: "Aucune transaction trouvée pour ce numéro" });
+        if (!numeroTel) {
+            return res.status(400).json({ message: "Le numéro est requis." });
         }
 
-        return res.status(200).json({ transactions });
+        const numTel = Number(numeroTel);
+        if (isNaN(numTel)) {
+            return res.status(400).json({ message: "Le numéro doit être valide." });
+        }
+
+        console.log("Numéro recherché :", numTel);
+
+        const envois = await TransactionRecent.find({
+            numero_expediteur: numTel
+        });
+
+        const receptions = await TransactionReception.find({
+            numero_destinataire: "0" + numTel
+        });
+
+        const allTransactions = [...envois, ...receptions].sort(
+            (a, b) => new Date(b.dateTransaction) - new Date(a.dateTransaction)
+        );
+
+        return res.json({ transactions: allTransactions });
+
     } catch (error) {
-        console.error("Erreur lors de la récupération des transactions :", error);
+        console.error("Erreur lors de la récupération :", error);
         return res.status(500).json({ message: "Erreur serveur" });
     }
 };
+
+
+// const GetAllTransactions = async (req, res) => {
+//     try {
+//         const { id } = req.params;
+//         console.log("Recherche transactions pour id:", id);
+
+//         const transactions = await TransactionRecent.find({ numero_expediteur: id });
+//         console.log("Transactions trouvées :", transactions);
+
+//         if (!transactions || transactions.length === 0) {
+//             return res.status(404).json({ message: "Aucune transaction trouvée pour ce numéro" });
+//         }
+
+//         return res.status(200).json({ transactions });
+//     } catch (error) {
+//         console.error("Erreur lors de la récupération des transactions :", error);
+//         return res.status(500).json({ message: "Erreur serveur" });
+//     }
+// };
 
 const GetReception = async (req, res) => {
     try {
@@ -56,7 +92,6 @@ const GetReception = async (req, res) => {
         })
     }
 }
-
 
 const CreateTransaction = async (req, res) => {
     try {
@@ -77,7 +112,7 @@ const CreateTransaction = async (req, res) => {
         }
 
         const montantNumeric = Number(montant);
-        console.log(numero_expediteur,numero_destinataire)
+        console.log(numero_expediteur, numero_destinataire)
         // Récupérer les comptes
         const expediteur = await AccountWave.findOne({ numeroTel: numero_expediteur });
         const destinataire = await AccountWave.findOne({ numeroTel: numero_destinataire });
@@ -165,7 +200,8 @@ const DeleteAllTransaction = async (req, res) => {
 module.exports = {
     GetAccountWave,
     GetAllAccount,
-    GetAllTransactions,
+    // GetAllTransactions,
+    getAllTransactionsForUser,
     CreateTransaction,
     DeleteAllTransaction,
     GetReception
