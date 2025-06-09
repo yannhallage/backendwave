@@ -13,7 +13,7 @@ const GetAccountWave = async (req, res) => {
         if (!accountWave_personnel) {
             return res.status(404).json({ message: "le compte wave pas trouvé" })
         }
-
+        console.log(accountWave_personnel)
         return res.status(200).json({
             accountWave_personnel
         })
@@ -57,6 +57,7 @@ const GetReception = async (req, res) => {
     }
 }
 
+
 const CreateTransaction = async (req, res) => {
     try {
         const {
@@ -75,34 +76,61 @@ const CreateTransaction = async (req, res) => {
             return res.status(400).json({ message: "Tous les champs sont requis." });
         }
 
-        // Créer transaction côté expéditeur
+        const montantNumeric = Number(montant);
+        console.log(numero_expediteur,numero_destinataire)
+        // Récupérer les comptes
+        const expediteur = await AccountWave.findOne({ numeroTel: numero_expediteur });
+        const destinataire = await AccountWave.findOne({ numeroTel: numero_destinataire });
+
+        if (!expediteur || !destinataire) {
+            console.log("Compte expéditeur ou destinataire introuvable.")
+            return res.status(404).json({ message: "Compte expéditeur ou destinataire introuvable." });
+        }
+
+        // Vérifier le solde suffisant
+        if (expediteur.sold < montantNumeric) {
+            console.log("Solde insuffisant pour effectuer la transaction.")
+            return res.status(400).json({ message: "Solde insuffisant pour effectuer la transaction." });
+        }
+
+        // Mettre à jour les soldes
+        expediteur.sold -= montantNumeric;
+        destinataire.sold += montantNumeric;
+
+        // Sauvegarder les soldes mis à jour
+        await Promise.all([
+            expediteur.save(),
+            destinataire.save()
+        ]);
+
+        // Créer les deux transactions
         const transactionEnvoi = new TransactionRecent({
             numero_expediteur: Number(numero_expediteur),
             numero_destinataire,
             type_transaction: "envoi",
-            montant: Number(montant),
+            montant: montantNumeric,
             dateTransaction
         });
 
-        // Créer transaction côté destinataire
         const transactionReception = new TransactionReception({
             numero_expediteur: Number(numero_expediteur),
             numero_destinataire,
             type_transaction: "reception",
-            montant: Number(montant),
+            montant: montantNumeric,
             dateTransaction
         });
 
-        // Enregistrement simultané
         const [savedEnvoi, savedReception] = await Promise.all([
             transactionEnvoi.save(),
             transactionReception.save()
         ]);
 
         return res.status(201).json({
-            message: "Transaction envoyée et reçue avec succès.",
+            message: "Transaction effectuée avec succès.",
             envoi: savedEnvoi,
-            reception: savedReception
+            reception: savedReception,
+            soldExpediteur: expediteur.sold,
+            soldDestinataire: destinataire.sold
         });
 
     } catch (error) {
@@ -111,7 +139,6 @@ const CreateTransaction = async (req, res) => {
     }
 };
 
-module.exports = CreateTransaction;
 
 const GetAllAccount = async (req, res) => {
     try {
