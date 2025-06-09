@@ -43,11 +43,17 @@ const getAllTransactionsForUser = async (req, res) => {
             numero_expediteur: numTel
         });
 
+
+        const recharges = await ErechargeWave.find({
+            numero_destinataire: numeroTel
+        });
+
         const receptions = await TransactionReception.find({
             numero_destinataire: "0" + numTel
         });
 
-        const allTransactions = [...envois, ...receptions].sort(
+        // Fusionner et trier toutes les transactions par date décroissante
+        const allTransactions = [...envois, ...recharges, ...receptions].sort(
             (a, b) => new Date(b.dateTransaction) - new Date(a.dateTransaction)
         );
 
@@ -58,6 +64,7 @@ const getAllTransactionsForUser = async (req, res) => {
         return res.status(500).json({ message: "Erreur serveur" });
     }
 };
+
 
 const UpdateServerRechargeAccount = async (req, res) => {
     try {
