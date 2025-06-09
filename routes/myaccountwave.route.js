@@ -1,16 +1,17 @@
 const express = require('express')
-const route_authentifcation = express.Router();
-const { GetAccountWave, getAllTransactionsForUser, GetAllAccount, CreateTransaction, DeleteAllTransaction,GetReception } = require('../controllers/myaccountwave.controller')
+const route_TransactionAccount = express.Router();
+const { GetAccountWave, getAllTransactionsForUser, UpdateServerRechargeAccount, GetAllAccount, CreateTransaction, DeleteAllTransaction, GetReception } = require('../controllers/myaccountwave.controller')
 
 
 // ici on gere les Auths
-route_authentifcation.get('/', GetAllAccount)
-route_authentifcation.post('/transactions', CreateTransaction);
-route_authentifcation.get('/transactions/:numeroTel', getAllTransactionsForUser)
-// route_authentifcation.get('/transactions/:id', GetAllTransactions)
-route_authentifcation.get('/reception/:id', GetReception)
-route_authentifcation.get('/:id', GetAccountWave)
-route_authentifcation.post('/:id', GetAccountWave)
-route_authentifcation.delete('/suppressions', DeleteAllTransaction)
+route_TransactionAccount.get('/', GetAllAccount)
+route_TransactionAccount.post('/transactions', CreateTransaction);
+route_TransactionAccount.get('/transactions/:numeroTel', getAllTransactionsForUser)
+// route_TransactionAccount.get('/transactions/:id', GetAllTransactions)
+route_TransactionAccount.get('/reception/:id', GetReception)
+route_TransactionAccount.get('/:id', GetAccountWave)
+route_TransactionAccount.post('/:id', GetAccountWave)
+route_TransactionAccount.put('/Erecharge', UpdateServerRechargeAccount)
+route_TransactionAccount.delete('/suppressions', DeleteAllTransaction)
 
-module.exports = route_authentifcation;
+module.exports = route_TransactionAccount;

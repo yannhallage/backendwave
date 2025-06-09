@@ -1,5 +1,6 @@
 const AccountWave = require('../models/accountwave.model');
 const TransactionRecent = require('../models/transactionRecent.model')
+const ErechargeWave = require('../models/erechargewave.model')
 const TransactionReception = require('../models/transactionReception.model')
 require('dotenv').config();
 const jwt = require('jsonwebtoken');
@@ -55,6 +56,51 @@ const getAllTransactionsForUser = async (req, res) => {
     } catch (error) {
         console.error("Erreur lors de la récupération :", error);
         return res.status(500).json({ message: "Erreur serveur" });
+    }
+};
+
+const UpdateServerRechargeAccount = async (req, res) => {
+    try {
+        const { numeroTel, montant } = req.body;
+        const numTel = numeroTel;
+        const rechargeMontant = Number(montant);
+
+        if (isNaN(numTel)) {
+            return res.status(400).json({ message: "Le numéro doit être valide." });
+        }
+
+        if (isNaN(rechargeMontant) || rechargeMontant < 500) {
+            return res.status(400).json({ message: "Le montant doit être supérieur ou égal à 500." });
+        }
+
+        const user = await AccountWave.findOne({ numeroTel: numTel });
+        if (!user) {
+            return res.status(404).json({ message: "Le compte n'existe pas." });
+        }
+
+        user.sold += rechargeMontant;
+        await user.save();
+
+        const dateTransaction = new Date();
+
+        const rechargeTransaction = new ErechargeWave({
+            numero_expediteur: "E-recharge",
+            numero_destinataire: numTel,
+            type_transaction: "rechargement",
+            montant: rechargeMontant,
+            dateTransaction: dateTransaction,
+        });
+
+        await rechargeTransaction.save();
+
+        console.log("Le serveur a effectué le rechargement.");
+        return res.status(200).json({
+            message: "Recharge effectuée avec succès.",
+            newSold: user.sold,
+        });
+    } catch (error) {
+        console.error("Erreur lors de la recharge de compte :", error);
+        return res.status(500).json({ message: "Une erreur est survenue lors de la recharge du compte." });
     }
 };
 
@@ -202,6 +248,7 @@ module.exports = {
     GetAllAccount,
     // GetAllTransactions,
     getAllTransactionsForUser,
+    UpdateServerRechargeAccount,
     CreateTransaction,
     DeleteAllTransaction,
     GetReception
