@@ -41,7 +41,7 @@ const PostNumeroandOTP = async (req, res) => {
             return res.status(400).json({ message: 'Code OTP invalide' });
         }
 
-        otpMap.delete(numeroTel); // Supprime le code après utilisation
+        otpMap.delete(numeroTel);
 
         const token = jwt.sign(
             { numeroTel },
