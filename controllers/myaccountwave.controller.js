@@ -51,8 +51,7 @@ const getAllTransactionsForUser = async (req, res) => {
         const receptions = await TransactionReception.find({
             numero_destinataire: "0" + numTel
         });
-
-        // Fusionner et trier toutes les transactions par date décroissante
+        
         const allTransactions = [...envois, ...recharges, ...receptions].sort(
             (a, b) => new Date(b.dateTransaction) - new Date(a.dateTransaction)
         );
@@ -111,26 +110,6 @@ const UpdateServerRechargeAccount = async (req, res) => {
     }
 };
 
-
-// const GetAllTransactions = async (req, res) => {
-//     try {
-//         const { id } = req.params;
-//         console.log("Recherche transactions pour id:", id);
-
-//         const transactions = await TransactionRecent.find({ numero_expediteur: id });
-//         console.log("Transactions trouvées :", transactions);
-
-//         if (!transactions || transactions.length === 0) {
-//             return res.status(404).json({ message: "Aucune transaction trouvée pour ce numéro" });
-//         }
-
-//         return res.status(200).json({ transactions });
-//     } catch (error) {
-//         console.error("Erreur lors de la récupération des transactions :", error);
-//         return res.status(500).json({ message: "Erreur serveur" });
-//     }
-// };
-
 const GetReception = async (req, res) => {
     try {
         const { id } = req.params;
@@ -166,7 +145,7 @@ const CreateTransaction = async (req, res) => {
 
         const montantNumeric = Number(montant);
         console.log(numero_expediteur, numero_destinataire)
-        // Récupérer les comptes
+        
         const expediteur = await AccountWave.findOne({ numeroTel: numero_expediteur });
         const destinataire = await AccountWave.findOne({ numeroTel: numero_destinataire });
 
@@ -175,13 +154,11 @@ const CreateTransaction = async (req, res) => {
             return res.status(404).json({ message: "Compte expéditeur ou destinataire introuvable." });
         }
 
-        // Vérifier le solde suffisant
         if (expediteur.sold < montantNumeric) {
             console.log("Solde insuffisant pour effectuer la transaction.")
             return res.status(400).json({ message: "Solde insuffisant pour effectuer la transaction." });
         }
 
-        // Mettre à jour les soldes
         expediteur.sold -= montantNumeric;
         destinataire.sold += montantNumeric;
 
@@ -191,7 +168,6 @@ const CreateTransaction = async (req, res) => {
             destinataire.save()
         ]);
 
-        // Créer les deux transactions
         const transactionEnvoi = new TransactionRecent({
             numero_expediteur: Number(numero_expediteur),
             numero_destinataire,
@@ -253,7 +229,6 @@ const DeleteAllTransaction = async (req, res) => {
 module.exports = {
     GetAccountWave,
     GetAllAccount,
-    // GetAllTransactions,
     getAllTransactionsForUser,
     UpdateServerRechargeAccount,
     CreateTransaction,
