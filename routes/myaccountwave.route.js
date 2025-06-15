@@ -8,7 +8,7 @@ const { GetAccountWave, getAllTransactionsForUser, UpdateServerRechargeAccount,
 
 
 // ici on gere les Auths
-route_TransactionAccount.get('/', GetAllAccount)
+route_TransactionAccount.get('/',verifyToken,GetAllAccount)
 route_TransactionAccount.post('/transactions', verifyToken, CreateTransaction);
 route_TransactionAccount.get('/transactions/:numeroTel', verifyToken, getAllTransactionsForUser)
 // route_TransactionAccount.get('/transactions/:id', GetAllTransactions)
