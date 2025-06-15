@@ -11,7 +11,6 @@ const generateOTP = (length = 6) => {
     return otp;
 };
 
-// Inscription d'un nouvel utilisateur
 const PostInscription_Wave = async (req, res) => {
     try {
         const { numeroTel, name, prenom, sold, ville, motdepasse } = req.body;
@@ -47,7 +46,6 @@ const PostInscription_Wave = async (req, res) => {
     }
 };
 
-// Vérification du numéro et envoi du code OTP
 const PostNumeroandOTP = async (req, res) => {
     try {
         const { numeroTel } = req.body;
